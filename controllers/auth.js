@@ -19,43 +19,35 @@ router.get('/sign-out', (req, res) => {
 
 router.post('/sign-up', async (req, res) => {
   try {
-    const emailExists = await User.findOne({ email: req.body.email });
-    if (emailExists) {
-      return res.render('auth/sign-up.ejs', {
-        error: 'Email already registered'
-      });
-    }
-
-    // Check password match
-    if (req.body.password !== req.body.confirmPassword) {
-      return res.render('auth/sign-up.ejs', {
-        error: 'Passwords do not match'
-      });
-    }
+    const { email, username, password, confirmPassword } = req.body;
 
     // Check if the username is already taken
-    const userInDatabase = await User.findOne({ username: req.body.username });
+    const userInDatabase = await User.findOne({ username });
     if (userInDatabase) {
       return res.send('Username already taken.');
     }
 
     // Check if the email is already taken
-    const emailInDatabase = await User.findOne({ email: req.body.email });
+    const emailInDatabase = await User.findOne({ email });
     if (emailInDatabase) {
-      return res.send('Email already registered.');
+      return res.render('auth/sign-up.ejs', {
+        error: 'Email already registered'
+      });
     }
 
     // Check if the password and confirm password match
-    if (req.body.password !== req.body.confirmPassword) {
-      return res.send('Password and Confirm Password must match');
+    if (password !== confirmPassword) {
+      return res.render('auth/sign-up.ejs', {
+        error: 'Passwords do not match'
+      });
     }
 
     // Create user with role determined by email domain
     const newUser = {
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
-      role: { type: 'student' }
+      username,
+      email,
+      password,
+      role: { type: 'student' },
     };
 
     const createdUser = await User.create(newUser);
@@ -87,8 +79,8 @@ router.post('/sign-in', async (req, res) => {
     }
 
     // Find user by email (include password)
-    const userInDatabase = await User.findOne({ email: req.body.email }).select('+password');
-
+    const userInDatabase = await User.findOne({ email });
+    
     if (!userInDatabase) {
       return res.status(401).render('auth/sign-in.ejs', {
         error: 'Invalid email or password',

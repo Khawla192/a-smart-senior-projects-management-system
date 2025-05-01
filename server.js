@@ -9,6 +9,10 @@ const methodOverride = require('method-override');
 const morgan = require('morgan');
 const session = require('express-session');
 
+// require the middleware!
+const isSignedIn = require('./middleware/is-signed-in.js');
+const passUserToView = require('./middleware/pass-user-to-view.js');
+
 // require the Controllers
 const authController = require('./controllers/auth.js');
 
@@ -18,7 +22,8 @@ const port = process.env.PORT ? process.env.PORT : '3000';
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(methodOverride('_method'));
-app.use(express.static('public'));
+// app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 // app.use(morgan('dev'));
 app.use(
   session({
@@ -27,6 +32,7 @@ app.use(
     saveUninitialized: true,
   })
 );
+app.use(passUserToView);
 
 //ROUTES
 // PUBLIC ROUTES
@@ -38,6 +44,7 @@ app.get('/', (req, res) => {
 
 // PROTECTED ROUTES
 app.use('/auth', authController);
+app.use(isSignedIn);
 
 // LISTENER
 app.listen(port, () => {
