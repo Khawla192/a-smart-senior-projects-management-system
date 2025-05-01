@@ -16,7 +16,9 @@ const port = process.env.PORT ? process.env.PORT : '3000';
 
 // MIDDLEWARE
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 app.use(methodOverride('_method'));
+app.use(express.static('public'));
 // app.use(morgan('dev'));
 app.use(
   session({
@@ -25,7 +27,6 @@ app.use(
     saveUninitialized: true,
   })
 );
-
 
 //ROUTES
 // PUBLIC ROUTES

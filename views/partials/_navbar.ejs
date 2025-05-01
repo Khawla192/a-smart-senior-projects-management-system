@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Smart Senior Projects Management System</title>
+    <style>
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: #ffffff;
+        }
+
+        #nav-header {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .authlink {
+            text-decoration: none;
+            color: #3498db;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .authlink:hover {
+            color: #2980b9;
+        }
+
+        .user-welcome {
+            color: #2ecc71;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .signout-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
+        }
+
+        .signout-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="navbar">
+            <h1 id="nav-header">A Smart Senior Projects Management System</h1>
+            <div class="nav-links">
+                <a class="authlink" href="/">Homepage</a>
+
+                <% if (locals.user) { %>
+                    <a class="authlink" href="/auth/sign-out">Sign Out</a>
+                    <% } else { %>
+                        <a class="authlink" href="/auth/sign-in">Sign In</a>
+                        <a class="authlink" href="/auth/sign-up">Sign Up</a>
+                        <% } %>
+            </div>
+        </div>
+    </nav>
+</body>
+
+</html>

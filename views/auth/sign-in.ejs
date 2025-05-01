@@ -1,18 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    form {
+      background: #f9f9f9;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .auth-links {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .auth-links a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .auth-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Sign in</h1>
-  <form action="/auth/sign-in" method="POST">
-    <label for="username">Username:</label>
-    <input type="text" name="username" id="username" required />
-    <label for="password">Password:</label>
-    <input type="password" name="password" id="password" required />
-    <button type="submit">Sign in</button>
-  </form>
+  <%- include('../partials/_navbar.ejs') %>
+    <div class="container">
+      <h1>Sign in</h1>
+      <form action="/auth/sign-in" method="POST">
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" required autocomplete="email username"
+          value="<%= locals.formData?.email || '' %>" />
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" required autocomplete="current-password" minlength="8" />
+
+        <button type="submit">Sign in</button>
+
+        <div class="auth-links">
+          <p>Don't have an account? <a href="/auth/sign-up">Sign up</a></p>
+          <p><a href="/auth/forgot-password">Forgot password?</a></p>
+        </div>
+      </form>
+    </div>
+    <script>
+      // Password validation
+      document.querySelector('form').addEventListener('submit', function (e) {
+        const password = document.getElementById('password').value;
+    
+        if (password.length < 8) {
+          e.preventDefault();
+          alert('Password must be at least 8 characters long!');
+          return false;
+        }
+    
+        return true;
+      });
+    </script>
 </body>
+
 </html>

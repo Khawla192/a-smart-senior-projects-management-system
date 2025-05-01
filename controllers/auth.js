@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 
-const User = require('../models/user.js');
+const User = require('./../models/user');
 
 router.get('/sign-up', (req, res) => {
   res.render('auth/sign-up.ejs');
@@ -19,26 +19,55 @@ router.get('/sign-out', (req, res) => {
 
 router.post('/sign-up', async (req, res) => {
   try {
+    const emailExists = await User.findOne({ email: req.body.email });
+    if (emailExists) {
+      return res.render('auth/sign-up.ejs', {
+        error: 'Email already registered'
+      });
+    }
+
+    // Check password match
+    if (req.body.password !== req.body.confirmPassword) {
+      return res.render('auth/sign-up.ejs', {
+        error: 'Passwords do not match'
+      });
+    }
+
     // Check if the username is already taken
     const userInDatabase = await User.findOne({ username: req.body.username });
     if (userInDatabase) {
       return res.send('Username already taken.');
     }
-  
-    // Username is not taken already!
+
+    // Check if the email is already taken
+    const emailInDatabase = await User.findOne({ email: req.body.email });
+    if (emailInDatabase) {
+      return res.send('Email already registered.');
+    }
+
     // Check if the password and confirm password match
     if (req.body.password !== req.body.confirmPassword) {
       return res.send('Password and Confirm Password must match');
     }
-  
-    // Must hash the password before sending to the database
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-    req.body.password = hashedPassword;
-  
-    // All ready to create the new user!
-    await User.create(req.body);
-  
-    res.redirect('/auth/sign-in');
+
+    // Create user with role determined by email domain
+    const newUser = {
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+      role: { type: 'student' }
+    };
+
+    const createdUser = await User.create(newUser);
+
+    req.session.user = {
+      email: createdUser.email,
+      username: createdUser.username,
+      _id: createdUser._id,
+      role: createdUser.role.type
+    };
+
+    res.redirect('/');
   } catch (error) {
     console.log(error);
     res.redirect('/');
@@ -47,29 +76,43 @@ router.post('/sign-up', async (req, res) => {
 
 router.post('/sign-in', async (req, res) => {
   try {
-    // Get the user from the database
-    const userInDatabase = await User.findOne({ username: req.body.username });
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).render('auth/sign-in.ejs', {
+        error: 'Email and password are required',
+        formData: { email }
+      });
+    }
+
+    // Find user by email (include password)
+    const userInDatabase = await User.findOne({ email: req.body.email }).select('+password');
+
     if (!userInDatabase) {
-      return res.send('Login failed. Please try again.');
+      return res.status(401).render('auth/sign-in.ejs', {
+        error: 'Invalid email or password',
+        formData: { email }
+      });
     }
-  
-    // Test their password with bcrypt
-    const validPassword = bcrypt.compareSync(
-      req.body.password,
-      userInDatabase.password
-    );
+
+    // Compare passwords using the model method
+    const validPassword = await userInDatabase.comparePassword(password);
     if (!validPassword) {
-      return res.send('Login failed. Please try again.');
+      return res.status(401).render('auth/sign-in.ejs', {
+        error: 'Invalid email or password',
+        formData: { email }
+      });
     }
-  
-    // There is a user AND they had the correct password. Time to make a session!
-    // Avoid storing the password, even in hashed format, in the session
-    // If there is other data you want to save to `req.session.user`, do so here!
+
+    // Successful login
     req.session.user = {
+      email: userInDatabase.email,
       username: userInDatabase.username,
-      _id: userInDatabase._id
+      _id: userInDatabase._id,
+      role: userInDatabase.role.type,
     };
-  
+
     res.redirect('/');
   } catch (error) {
     console.log(error);
