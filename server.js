@@ -2,6 +2,7 @@ require('dotenv').config();
 require('./config/database.js');
 
 const express = require('express');
+const path = require('path');
 const app = express();
 
 const mongoose = require('mongoose');
@@ -15,6 +16,11 @@ const passUserToView = require('./middleware/pass-user-to-view.js');
 
 // require the Controllers
 const authController = require('./controllers/auth.js');
+const studentsController = require('./controllers/students.js');
+const adminController = require('./controllers/admin.js');
+const supervisorController = require('./controllers/supervisors.js');
+const externalExaminersController = require('./controllers/external_examiners.js');
+
 
 const port = process.env.PORT ? process.env.PORT : '3000';
 
@@ -24,27 +30,58 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 // app.use(express.static('public'));
 app.use(express.static(path.join(__dirname, 'public')));
-// app.use(morgan('dev'));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(morgan('dev'));
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: { 
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
+    },
   })
 );
 app.use(passUserToView);
 
 //ROUTES
 // PUBLIC ROUTES
-app.get('/', (req, res) => {
-  res.render('index.ejs', {
-    user: req.session.user,
-  });
+app.get('/', async (req, res) => {
+  try {
+    if (req.session.user) {
+      // Redirect based on user role
+      switch(req.session.user.role) {
+        case 'student':
+          return res.redirect('/students/dashboard');
+        case 'supervisor':
+          return res.redirect('/supervisors/dashboard');
+        case 'admin':
+          return res.redirect('/admin/dashboard');
+        case 'external_examiner':
+          return res.redirect('/external_examiners/dashboard');
+        default:
+          return res.redirect('/auth/sign-in');
+      }
+    } else {
+      res.render('index.ejs', {
+        user: req.session.user,
+      });
+    }
+  } catch (error) {
+    console.error('Root route error:', error);
+    res.redirect('/auth/sign-in');
+  }
 });
 
 // PROTECTED ROUTES
 app.use('/auth', authController);
 app.use(isSignedIn);
+app.use('/students', studentsController);
+app.use('/admin', adminController);
+app.use('/supervisors', supervisorController);
+app.use('/external_examiners', externalExaminersController);
 
 // LISTENER
 app.listen(port, () => {

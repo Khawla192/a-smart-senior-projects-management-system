@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Student Dashboard</title>
+</head>
+
+<body>
+    <%- include('../partials/_navbar.ejs') %>
+        <h1>Welcome to your Dashboard</h1>
+        <% if (user) { %>
+            <p>Logged in as: <%= user.username %></p>
+            <% } %>
+</body>
+
+</html>

@@ -9,7 +9,7 @@
 
 <body>
   <%- include('./partials/_navbar.ejs') %>
-    <% if (locals.user) { %>
+    <% if (user) { %>
       <h1>Welcome to the app, <%= user.username %>!</h1>
       <p>
         <a href="/auth/sign-out">Sign out</a>

@@ -5,24 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/stylesheets/partials.css">
-    <title>A Smart Senior Projects Management System</title>
+    <title>Navigation bar</title>
 </head>
 
 <body>
     <nav>
-        <div class="navbar">
-            <h1 id="nav-header">A Smart Senior Projects Management System</h1>
-            <div class="nav-links">
-                <a class="authlink" href="/">Homepage</a>
-
-                <% if (locals.user) { %>
+        <% if(user) { %>
+            <div class="navbar">
+                <h1 id="nav-header">SSPMS</h1>
+                <h2 id="nav-header">A Smart Senior Projects Management System</h2>
+                <div class="nav-links">
+                    <a class="authlink" href="/">Homepage</a>
                     <a class="authlink" href="/auth/sign-out">Sign Out</a>
-                    <% } else { %>
+                </div>
+            </div>
+            <% } else { %>
+                <div class="navbar">
+                    <h1 id="nav-header">SSPM</h1>
+                    <div class="nav-links">
+                        <a class="authlink" href="/">Homepage</a>
                         <a class="authlink" href="/auth/sign-in">Sign In</a>
                         <a class="authlink" href="/auth/sign-up">Sign Up</a>
-                        <% } %>
-            </div>
-        </div>
+                    </div>
+                </div>
+                <% } %>
     </nav>
 </body>
 

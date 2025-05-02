@@ -45,6 +45,9 @@ const userSchema = mongoose.Schema(
       type: roleSchema,
       required: true,
     },
+    firstName: String,
+    lastName: String,
+    phone: Number,
   },
   {
     timestamps: true,
