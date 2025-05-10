@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Project Idea</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .select2-container--default .select2-selection--single,
+        .select2-container--default .select2-selection--multiple {
+            min-height: 38px;
+            border: 1px solid #ced4da;
+        }
+
+        .supervisor-fields {
+            display: flex;
+            gap: 20px;
+        }
+
+        .supervisor-field {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="mb-4">Edit Project Idea</h2>
+
+            <% if (typeof error !== 'undefined') { %>
+                <div class="alert alert-danger mb-4">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form id="editIdeaForm" action="/students/projects/<%= project._id %>?_method=PUT" method="POST">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Project Title</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           value="<%= project.title %>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Project Description</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="5" required><%= project.description %></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="teamMembers" class="form-label">Team Members (select 1-4)</label>
+                    <select class="form-control select2-multiple" id="teamMembers" name="teamMembers"
+                        multiple="multiple" required>
+                        <% students.forEach(student => { %>
+                            <% if (student._id.toString() !== user._id.toString()) { %>
+                                <option value="<%= student._id %>" 
+                                    <%= project.teamMembers.some(m => m.member.toString() === student._id.toString()) ? 'selected' : '' %>>
+                                    <%= student.email %>
+                                </option>
+                            <% } %>
+                        <% }); %>
+                    </select>
+                    <small class="text-muted">You are automatically included as team leader</small>
+                </div>
+
+                <div class="mb-4 supervisor-fields">
+                    <div class="supervisor-field">
+                        <label for="mainSupervisor" class="form-label">Main Supervisor (required)</label>
+                        <select class="form-control select2-single" id="mainSupervisor" name="mainSupervisor" required>
+                            <option value="">Select main supervisor</option>
+                            <% supervisors.forEach(supervisor => { %>
+                                <option value="<%= supervisor._id %>"
+                                    <%= project.supervisors[0].toString() === supervisor._id.toString() ? 'selected' : '' %>>
+                                    <%= supervisor.email %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="supervisor-field">
+                        <label for="coSupervisor" class="form-label">Co-Supervisor (optional)</label>
+                        <select class="form-control select2-single" id="coSupervisor" name="coSupervisor">
+                            <option value="">Select co-supervisor</option>
+                            <% supervisors.forEach(supervisor => { %>
+                                <option value="<%= supervisor._id %>"
+                                    <%= project.supervisors[1] && project.supervisors[1].toString() === supervisor._id.toString() ? 'selected' : '' %>>
+                                    <%= supervisor.email %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Update Idea</button>
+                    <a href="/students/projects/index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize select2 for multiple selection (team members)
+            $('.select2-multiple').select2({
+                placeholder: 'Select team members',
+                allowClear: true
+            });
+
+            // Initialize select2 for single selection (supervisors)
+            $('.select2-single').select2({
+                placeholder: 'Select supervisor',
+                allowClear: true
+            });
+
+            $('#editIdeaForm').submit(function (e) {
+                const teamCount = $('#teamMembers').val()?.length || 0;
+                const mainSupervisor = $('#mainSupervisor').val();
+                const coSupervisor = $('#coSupervisor').val();
+
+                // Validate team size
+                if (teamCount < 1 || teamCount > 4) {
+                    alert('Please select 1-4 team members (excluding yourself)');
+                    return false;
+                }
+
+                // Validate main supervisor is selected
+                if (!mainSupervisor) {
+                    alert('Please select a main supervisor');
+                    return false;
+                }
+
+                // Validate co-supervisor is different from main supervisor
+                if (coSupervisor && coSupervisor === mainSupervisor) {
+                    alert('Co-supervisor must be different from main supervisor');
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Applications</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .status-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .status-header {
+            padding: 15px 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .approved-header {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        .pending-header {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+        .rejected-header {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        .project-list {
+            padding: 20px;
+        }
+        .project-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: white;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        .project-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+        .project-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .project-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .project-description {
+            margin-bottom: 12px;
+            color: #495057;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.85rem;
+        }
+        .status-count {
+            background: rgba(255,255,255,0.7);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        /* Added this to fix the Student Idea badge visibility */
+        .badge.bg-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Student Applications</h2>
+            <a href="/supervisors/dashboard" class="btn btn-outline-secondary">
+                Back to Dashboard
+            </a>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <% if (projects && projects.length > 0) { 
+            // Filter projects to only show those where the current supervisor is either:
+            // 1. The main supervisor OR
+            // 2. A co-supervisor OR
+            // 3. The project is based on their idea
+            const relevantProjects = projects.filter(project => {
+                return project.supervisors.some(sup => sup.equals(supervisor._id)) ||
+                       project.coSupervisors.some(sup => sup.equals(supervisor._id)) ||
+                       (project.ideaSubmittedBy && project.ideaSubmittedBy.equals(supervisor._id));
+            });
+
+            const approved = relevantProjects.filter(p => p.status === 'assigned');
+            const pending = relevantProjects.filter(p => p.status === 'pending');
+            const rejected = relevantProjects.filter(p => p.status === 'rejected');
+        %>
+
+        <!-- Approved Projects Section -->
+        <div class="status-container mb-4">
+            <div class="status-header approved-header">
+                <span>Approved Projects</span>
+                <span class="status-count"><%= approved.length %> projects</span>
+            </div>
+            <div class="project-list">
+                <% approved.forEach(project => { %>
+                <div class="project-item">
+                    <div class="project-title">
+                        <span><%= project.title %></span>
+                        <span class="badge bg-success">Approved</span>
+                    </div>
+                    <div class="project-meta">
+                        <% if (project.isStudentIdea) { %>
+                            <span class="badge bg-purple">Student Idea</span>
+                        <% } else { %>
+                            <span class="badge bg-info">Supervisor Idea</span>
+                        <% } %>
+                        <% if (project.selectedStudent) { %>
+                            <span>Assigned to: <%= project.selectedStudent.firstName %> <%= project.selectedStudent.lastName %> (<%= project.selectedStudent.email %>)</span>
+                        <% } %>
+                    </div>
+                    <div class="project-description">
+                        <%= project.description.substring(0, 120) %>...
+                    </div>
+                    <a href="/supervisors/projects/student-project/<%= project._id %>" 
+                       class="btn btn-primary btn-sm">
+                        View Details
+                    </a>
+                </div>
+                <% }); %>
+                <% if (approved.length === 0) { %>
+                    <div class="text-muted">No approved projects</div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Pending Projects Section -->
+        <div class="status-container mb-4">
+            <div class="status-header pending-header">
+                <span>Pending Review</span>
+                <span class="status-count"><%= pending.length %> projects</span>
+            </div>
+            <div class="project-list">
+                <% pending.forEach(project => { %>
+                <div class="project-item">
+                    <div class="project-title">
+                        <span><%= project.title %></span>
+                        <span class="badge bg-warning">Pending</span>
+                    </div>
+                    <div class="project-meta">
+                        <% if (project.isStudentIdea) { %>
+                            <span class="badge bg-purple">Student Idea</span>
+                        <% } else { %>
+                            <span class="badge bg-info">Supervisor Idea</span>
+                        <% } %>
+                        <% if (project.applicants?.length > 0) { %>
+                            <span><%= project.applicants.length %> applicants</span>
+                        <% } %>
+                    </div>
+                    <div class="project-description">
+                        <%= project.description.substring(0, 120) %>...
+                    </div>
+                    <a href="/supervisors/projects/student-project/<%= project._id %>" 
+                       class="btn btn-primary btn-sm">
+                        Review Application
+                    </a>
+                </div>
+                <% }); %>
+                <% if (pending.length === 0) { %>
+                    <div class="text-muted">No pending projects</div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Rejected Projects Section -->
+        <div class="status-container mb-4">
+            <div class="status-header rejected-header">
+                <span>Rejected Projects</span>
+                <span class="status-count"><%= rejected.length %> projects</span>
+            </div>
+            <div class="project-list">
+                <% rejected.forEach(project => { %>
+                <div class="project-item">
+                    <div class="project-title">
+                        <span><%= project.title %></span>
+                        <span class="badge bg-danger">Rejected</span>
+                    </div>
+                    <div class="project-meta">
+                        <% if (project.isStudentIdea) { %>
+                            <span class="badge bg-purple">Student Idea</span>
+                        <% } else { %>
+                            <span class="badge bg-info">Supervisor Idea</span>
+                        <% } %>
+                        <% if (project.rejectedAt) { %>
+                            <span>Rejected on: <%= project.rejectedAt.toLocaleDateString() %></span>
+                        <% } %>
+                    </div>
+                    <div class="project-description">
+                        <%= project.description.substring(0, 120) %>...
+                    </div>
+                    <% if (project.rejectionReason) { %>
+                        <div class="alert alert-danger mt-2 p-2">
+                            <strong>Reason:</strong> <%= project.rejectionReason %>
+                        </div>
+                    <% } %>
+                    <a href="/supervisors/projects/student-project/<%= project._id %>" 
+                       class="btn btn-primary btn-sm mt-2">
+                        View Details
+                    </a>
+                </div>
+                <% }); %>
+                <% if (rejected.length === 0) { %>
+                    <div class="text-muted">No rejected projects</div>
+                <% } %>
+            </div>
+        </div>
+
+        <% } else { %>
+            <div class="alert alert-info">
+                No student applications or submitted ideas found.
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .project-card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .applicant-card {
+            transition: all 0.3s ease;
+        }
+        .applicant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+    
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Project Details</h2>
+            <div>
+                <a href="/supervisors/projects/show-all" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Back to Projects
+                </a>
+                <a href="/supervisors/projects/edit/<%= project._id %>" class="btn btn-warning me-2">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <form action="/supervisors/projects/<%= project._id %>?_method=DELETE" 
+                      method="POST" 
+                      class="d-inline"
+                      onsubmit="return confirm('Are you sure you want to delete this project?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <div class="card project-card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><%= project.title %></h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="card-title">Project Information</h5>
+                        <p class="card-text"><%= project.description %></p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Status:</strong>
+                            <span class="badge bg-<%= 
+                                project.status === 'available' ? 'success' : 
+                                project.status === 'pending' ? 'warning' :
+                                project.status === 'assigned' ? 'primary' : 
+                                project.status === 'rejected' ? 'danger' : 'secondary'
+                            %> ms-2">
+                                <%= project.status %>
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Created:</strong>
+                            <span class="ms-2"><%= project.createdAt.toLocaleString() %></span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Last Updated:</strong>
+                            <span class="ms-2"><%= project.updatedAt.toLocaleString() %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Supervisors</h5>
+                        <ul class="list-group mb-4">
+                            <% project.supervisors.forEach(supervisor => { %>
+                            <li class="list-group-item">
+                                <i class="bi bi-person-badge me-2"></i>
+                                <%= supervisor.firstName %> <%= supervisor.lastName %>
+                                <span class="text-muted ms-2"><%= supervisor.email %></span>
+                            </li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Assigned Student</h5>
+                        <% if (project.selectedStudent || project.student) { %>
+                            <% const student = project.selectedStudent || project.student %>
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="bi bi-person-check me-2"></i>
+                                        <%= student.firstName %> <%= student.lastName %>
+                                    </h6>
+                                    <p class="card-text mb-1"><%= student.email %></p>
+                                    <p class="card-text text-muted small">
+                                        Assigned on: 
+                                        <% if (project.assignedDate) { %>
+                                            <%= project.assignedDate.toLocaleDateString() %>
+                                        <% } else { %>
+                                            Unknown date
+                                        <% } %>
+                                    </p>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="alert alert-info">
+                                No student assigned to this project yet.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <% if (project.teamMembers && project.teamMembers.length > 0) { %>
+                <div class="mb-4">
+                    <h5>Team Members</h5>
+                    <div class="row">
+                        <% project.teamMembers.forEach(member => { %>
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <%= member.member.email %>
+                                        <%= member.member.firstName %> <%= member.member.lastName %>
+                                        <% if (member.role === 'leader') { %>
+                                            <span class="badge bg-primary ms-2">Leader</span>
+                                        <% } %>
+                                    </h6>
+                                    <p class="card-text"><%= member.member.email %></p>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Applicants Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">Applicants</h4>
+            </div>
+            <div class="card-body">
+                <% if (project.applicants && project.applicants.length > 0) { %>
+                    <div class="row">
+                        <% project.applicants.forEach(applicant => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="card applicant-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5><%= applicant.student.firstName %> <%= applicant.student.lastName %></h5>
+                                            <p class="mb-1"><%= applicant.student.email %></p>
+                                            <small class="text-muted">
+                                                Applied: <%= applicant.appliedAt.toLocaleString() %>
+                                            </small>
+                                        </div>
+                                        <% if (project.status === 'pending') { %>
+                                        <div class="btn-group">
+                                            <form action="/supervisors/projects/approve-applicant" method="POST">
+                                                <input type="hidden" name="projectId" value="<%= project._id %>">
+                                                <input type="hidden" name="studentId" value="<%= applicant.student._id %>">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="bi bi-check-circle"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form action="/supervisors/projects/reject-applicant" method="POST" class="ms-2">
+                                                <input type="hidden" name="projectId" value="<%= project._id %>">
+                                                <input type="hidden" name="studentId" value="<%= applicant.student._id %>">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-x-circle"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="alert alert-info">
+                        No applicants yet.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

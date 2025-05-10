@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Notifications</title>
+</head>
+
+<body>
+    <%- include('../partials/_navbar') %>
+
+        <div class="container mt-4">
+            <h2>Notifications</h2>
+
+            <% if (notifications.length===0) { %>
+                <p>No notifications yet</p>
+                <% } else { %>
+                    <div class="list-group">
+                        <% notifications.forEach(notification=> { %>
+                            <a href="<%= notification.link %>" class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <p class="mb-1">
+                                        <%= notification.message %>
+                                    </p>
+                                    <small>
+                                        <%= notification.createdAt.toLocaleDateString() %>
+                                    </small>
+                                </div>
+                            </a>
+                            <% }); %>
+                    </div>
+                    <% } %>
+        </div>
+</body>
+
+</html>

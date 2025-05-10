@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Student Project</title>
+    <style>
+        .idea-badge {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .team-member-badge {
+            background-color: #20c997;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Student Project Details</h2>
+            <a href="/supervisors/projects/applicants" class="btn btn-outline-secondary">
+                Back to Applications
+            </a>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3><%= project.title %></h3>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-<%= 
+                        project.status === 'pending' ? 'warning' :
+                        project.status === 'assigned' ? 'success' : 
+                        'danger'
+                    %>">
+                        <%= project.status %>
+                    </span>
+                    <% if (project.isStudentIdea) { %>
+                        <span class="badge idea-badge">Student Idea</span>
+                    <% } else { %>
+                        <span class="badge bg-info">Supervisor Idea</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h5>Project Description</h5>
+                <p class="mb-4"><%= project.description %></p>
+
+                <% if (project.selectedStudent) { %>
+                    <div class="alert alert-success mb-4">
+                        <h5>Selected Student:</h5>
+                        <p>
+                            <%= project.selectedStudent.firstName %> 
+                            <%= project.selectedStudent.lastName %>
+                            (<%= project.selectedStudent.email %>)
+                        </p>
+                    </div>
+                <% } %>
+
+                <% if (project.isStudentIdea) { %>
+                    <div class="alert alert-info mb-4">
+                        <h5>Submitted by:</h5>
+                        <p>
+                            <%= project.ideaSubmittedBy.firstName %> 
+                            <%= project.ideaSubmittedBy.lastName %>
+                            (<%= project.ideaSubmittedBy.email %>)
+                        </p>
+
+                        <% if (project.teamMembers && project.teamMembers.length > 0) { %>
+                            <h5 class="mt-3">Team Members:</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <% project.teamMembers.forEach(member => { %>
+                                    <span class="badge team-member-badge">
+                                        <%= member.member.firstName %>
+                                        <%= member.member.lastName %>
+                                        (<%= member.member.email %>)
+                                        <% if (member.role === 'leader') { %>
+                                            (Leader)
+                                        <% } %>
+                                    </span>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+
+                <% if (project.applicants && project.applicants.length > 0 && project.status === 'pending') { %>
+                    <div class="alert alert-info mb-4">
+                        <h5>Applicants:</h5>
+                        <div class="row">
+                            <% project.applicants.forEach(applicant => { %>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>
+                                                <%= applicant.student.firstName %>
+                                                <%= applicant.student.lastName %>
+                                            </h5>
+                                            <p class="text-muted">
+                                                <%= applicant.student.email %>
+                                            </p>
+                                            <% if (applicant.status) { %>
+                                                <span class="badge bg-<%= 
+                                                    applicant.status === 'approved' ? 'success' : 
+                                                    'danger'
+                                                %>">
+                                                    <%= applicant.status %>
+                                                </span>
+                                                <% if (applicant.status === 'rejected') { %>
+                                                    <p class="text-muted small mt-1">
+                                                        Rejected on: <%= applicant.rejectedAt.toLocaleDateString() %>
+                                                    </p>
+                                                <% } %>
+                                            <% } else { %>
+                                                <div class="mt-2">
+                                                    <form action="/supervisors/projects/approve-applicant" method="POST" class="d-inline">
+                                                        <input type="hidden" name="projectId" value="<%= project._id %>">
+                                                        <input type="hidden" name="studentId" value="<%= applicant.student._id %>">
+                                                        <button type="submit" class="btn btn-sm btn-success me-2">
+                                                            Approve
+                                                        </button>
+                                                    </form>
+                                                    <form action="/supervisors/projects/reject-applicant" method="POST" class="d-inline">
+                                                        <input type="hidden" name="projectId" value="<%= project._id %>">
+                                                        <input type="hidden" name="studentId" value="<%= applicant.student._id %>">
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Updated Review Project Section -->
+                <% if (project.status === 'pending') { %>
+                    <div class="border p-3 mb-4">
+                        <h5>Project Decision</h5>
+                        
+                        <% if (project.isStudentIdea) { %>
+                            <!-- For student-submitted ideas -->
+                            <form action="/supervisors/projects/approve-idea" method="POST" class="mb-3">
+                                <input type="hidden" name="projectId" value="<%= project._id %>">
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="bi bi-check-circle"></i> Approve Project
+                                </button>
+                            </form>
+                            <form action="/supervisors/projects/reject-idea" method="POST">
+                                <input type="hidden" name="projectId" value="<%= project._id %>">
+                                <div class="mb-3">
+                                    <label for="rejectionReason" class="form-label">Rejection Reason (required)</label>
+                                    <textarea class="form-control" id="rejectionReason" name="reason" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle"></i> Reject Project
+                                </button>
+                            </form>
+                            <% } else if (project.selectedStudent) { %>
+                                <!-- For supervisor ideas with selected student -->
+                                <form action="/supervisors/projects/approve-applicant" method="POST" class="mb-3">
+                                    <input type="hidden" name="projectId" value="<%= project._id %>">
+                                    <input type="hidden" name="studentId" value="<%= project.selectedStudent._id %>">
+                                    <button type="submit" class="btn btn-success me-2">
+                                        <i class="bi bi-check-circle"></i> Finalize Approval
+                                    </button>
+                                </form>
+                                <form action="/supervisors/projects/reject-applicant" method="POST">
+                                    <input type="hidden" name="projectId" value="<%= project._id %>">
+                                    <input type="hidden" name="studentId" value="<%= project.selectedStudent._id %>">
+                                    <button type="submit" class="btn btn-warning me-2">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Cancel Selection
+                                    </button>
+                                </form>
+                            <% } else { %>
+                            <!-- For supervisor ideas without selected student -->
+                            <div class="alert alert-info">
+                                <p>Please review and approve an applicant above to assign them to this project.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+
+                <% if (project.status === 'rejected' && project.rejectionReason) { %>
+                    <div class="alert alert-danger">
+                        <h5>Rejection Reason:</h5>
+                        <p><%= project.rejectionReason %></p>
+                    </div>
+                <% } %>
+
+                <% if (project.status === 'assigned') { %>
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5>Project Phases & Feedback</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <p>Review student submissions and provide feedback</p>
+                                <a href="/supervisors/projects/phases/<%= project._id %>" class="btn btn-primary">
+                                    <i class="bi bi-folder2-open"></i> View Project Phases
+                                </a>
+                            </div>
+                            
+                            <% if (project.feedback && project.feedback.length > 0) { %>
+                                <div class="alert alert-info">
+                                    <h6>Previous Feedback:</h6>
+                                    <% project.feedback.forEach(fb => { %>
+                                        <div class="mb-2 p-2 border-bottom">
+                                            <p><strong><%= fb.phase %>:</strong> <%= fb.comment %></p>
+                                            <small class="text-muted">
+                                                Given on <%= fb.createdAt.toLocaleDateString() %>
+                                            </small>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</body>
+</html>

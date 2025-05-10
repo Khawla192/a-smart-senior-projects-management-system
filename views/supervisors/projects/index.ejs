@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Project Process - <%= project.title %>
+    </title>
+</head>
+
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="phase-navigation">
+        <% ['proposal', 'literature-review' , 'design' , 'implementation' , 'testing' , 'report' , 'presentation'
+            ].forEach(phase=> { %>
+            <a href="/projects/process/<%= phase %>" class="<%= currentPhase === phase ? 'active' : '' %>">
+                <%= phase.replace('-', ' ' ) %>
+            </a>
+            <% }) %>
+    </div>
+
+    // Phase Content
+    <div class="phase-content mt-4">
+        <% if (currentPhase==='proposal' ) { %>
+            <%- include('./proposal') %>
+                <% } else if (currentPhase==='design' ) { %>
+                    <%- include('./design') %>
+                        <% } else if (currentPhase==='literature-review' ) { %>
+                            <%- include('./literature-review') %>
+                                <% } %>
+    </div>
+</body>
+
+</html>

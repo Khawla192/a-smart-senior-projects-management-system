@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Project Phases</title>
+    <style>
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .upload-area:hover {
+            background-color: #f8f9fa;
+        }
+        .border-primary {
+            border-color: #0d6efd !important;
+        }
+        .border-success {
+            border-color: #28a745 !important;
+        }
+        .border-danger {
+            border-color: #dc3545 !important;
+        }
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        .opacity-0 {
+            opacity: 0;
+        }
+        .position-absolute {
+            position: absolute;
+        }
+        .w-100 {
+            width: 100%;
+        }
+        .h-100 {
+            height: 100%;
+        }
+        .d-none {
+            display: none;
+        }
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.875em;
+        }
+        .phase-complete {
+            border-left: 4px solid #28a745;
+        }
+        .phase-pending {
+            border-left: 4px solid #ffc107;
+        }
+        .phase-feedback {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .feedback-item {
+            border-left: 3px solid #0d6efd;
+            padding-left: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../../partials/_navbar') %>
+
+    <div class="container py-4">
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Project Phases</h2>
+            <a href="/students/projects/<%= project._id %>" class="btn btn-outline-secondary">
+                Back to Project
+            </a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><%= project.title %></h4>
+            </div>
+        </div>
+
+        <form action="/students/projects/phases/<%= project._id %>" method="POST" enctype="multipart/form-data">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0">Submit Phase</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <select name="phase" class="form-select" required>
+                                <option value="">Select a phase...</option>
+                                <option value="proposal">1. Proposal</option>
+                                <option value="literatureReview">2. Literature Review</option>
+                                <option value="planning">3. Planning</option>
+                                <option value="design">4. Design</option>
+                                <option value="implementation">5. Implementation</option>
+                                <option value="presentation">6. Presentation</option>
+                                <option value="reportPaper">7. Report Paper</option>
+                                <option value="poster">8. Poster</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- File Upload Section -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Upload File <span class="text-danger">*</span></label>
+                        <div class="upload-area position-relative" id="uploadArea">
+                            <i class="bi bi-cloud-arrow-up fs-1"></i>
+                            <p class="mt-2">Drag & drop your file here or click to browse</p>
+                            <input type="file" name="file" id="fileInput"
+                                class="position-absolute w-100 h-100 opacity-0" required>
+                            <div id="fileName" class="text-muted mt-2"></div>
+                            <small class="form-text text-muted">
+                                Accepted formats: PDF, DOCX, PPTX, ZIP (Max 25MB)
+                            </small>
+                        </div>
+                        <div id="fileError" class="invalid-feedback d-none">
+                            Please select a file to upload
+                        </div>
+                    </div>
+
+                    <!-- Additional Notes Section -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Additional Notes</label>
+                        <textarea name="note" class="form-control" rows="3"
+                            placeholder="Add any notes about this submission..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="bi bi-save me-1"></i> Submit Phase
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">Phase Submissions</h4>
+            </div>
+            <div class="card-body">
+                <% const phases = [
+                    { key: 'proposal', name: '1. Proposal' },
+                    { key: 'literatureReview', name: '2. Literature Review' },
+                    { key: 'planning', name: '3. Planning' },
+                    { key: 'design', name: '4. Design' },
+                    { key: 'implementation', name: '5. Implementation' },
+                    { key: 'presentation', name: '6. Presentation' },
+                    { key: 'reportPaper', name: '7. Report Paper' },
+                    { key: 'poster', name: '8. Poster' }
+                ]; %>
+
+                <% phases.forEach(phase => { %>
+                    <% const phaseData = project.phases[phase.key]; %>
+                    <div class="card phase-card mb-3 <%= phaseData?.file ? 'phase-complete' : 'phase-pending' %>">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5><%= phase.name %></h5>
+                                    <% if (phaseData && phaseData.submittedAt) { %>
+                                        <p class="mb-1"><%= phaseData.note || 'No notes provided' %></p>
+                                        <small class="text-muted">
+                                            Submitted: <%= new Date(phaseData.submittedAt).toLocaleString() %>
+                                        </small>
+                                    <% } else { %>
+                                        <p class="text-muted">Not submitted yet</p>
+                                    <% } %>
+                                </div>
+                                <% if (phaseData?.file) { %>
+                                    <div>
+                                        <a href="<%= phaseData.file %>" class="btn btn-sm btn-outline-primary" download>
+                                            <i class="bi bi-download me-1"></i> Download
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Feedback Section -->
+                            <% if (phaseData?.feedback?.length > 0) { %>
+                                <div class="phase-feedback mt-3">
+                                    <h6>Supervisor Feedback:</h6>
+                                    <% phaseData.feedback.forEach(fb => { %>
+                                        <div class="feedback-item">
+                                            <p class="mb-1"><%= fb.comment %></p>
+                                            <small class="text-muted">
+                                                Received on <%= new Date(fb.createdAt).toLocaleDateString() %>
+                                            </small>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const fileError = document.getElementById('fileError');
+        const form = document.querySelector('form');
+
+        // Click to select file
+        uploadArea.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        // File selected handler
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                
+                fileName.textContent = `${file.name} (${fileSizeMB} MB)`;
+                uploadArea.classList.add('border-success', 'bg-light');
+                fileError.classList.add('d-none');
+            }
+        });
+
+        // Drag and drop handling
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-primary');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-primary');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-primary');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const file = fileInput.files[0];
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                
+                fileName.textContent = `${file.name} (${fileSizeMB} MB)`;
+                uploadArea.classList.add('border-success', 'bg-light');
+            }
+        });
+
+        // Form validation
+        form.addEventListener('submit', (e) => {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                fileError.classList.remove('d-none');
+                uploadArea.classList.add('border-danger');
+                uploadArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // File download check
+        async function checkFileExists(linkElement) {
+            const errorDiv = linkElement.nextElementSibling;
+            errorDiv.classList.add('d-none');
+            
+            try {
+                const response = await fetch(linkElement.href, { method: 'HEAD' });
+                if (!response.ok) {
+                    errorDiv.classList.remove('d-none');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                errorDiv.classList.remove('d-none');
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>

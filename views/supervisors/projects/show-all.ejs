@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Supervised Projects</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .action-buttons .btn {
+            margin-right: 5px;
+        }
+        .badge {
+            font-size: 0.85em;
+        }
+        .student-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .team-leader {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Supervised Projects</h2>
+            <div>
+                <a href="/supervisors/projects/new" class="btn btn-primary me-2">
+                    <i class="bi bi-plus-circle"></i> Add Project
+                </a>
+                <a href="/supervisors/dashboard" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <% if (projects.length === 0) { %>
+            <div class="alert alert-info">
+                You haven't created any projects yet.
+                <a href="/supervisors/projects/new" class="alert-link">Create your first project</a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Student/Team</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% projects.forEach(project => { %>
+                        <tr>
+                            <td><strong><%= project.title %></strong></td>
+                            <td>
+                                <span class="badge bg-<%= 
+                                    project.status === 'available' ? 'success' : 
+                                    project.status === 'pending' ? 'warning' :
+                                    project.status === 'assigned' ? 'primary' : 
+                                    project.status === 'in_progress' ? 'info' : 
+                                    project.status === 'completed' ? 'secondary' : 'danger'
+                                %>">
+                                    <%= project.status %>
+                                </span>
+                                <% if (project.isStudentIdea) { %>
+                                    <span class="badge bg-purple">Student Idea</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (project.selectedStudent) { %>
+                                    <div class="student-info">
+                                        <span class="team-leader">
+                                            <%= project.selectedStudent.firstName %> <%= project.selectedStudent.lastName %>
+                                        </span>
+                                        <small class="text-muted"><%= project.selectedStudent.email %></small>
+                                    </div>
+                                <% } else if (project.teamMembers && project.teamMembers.length > 0) { %>
+                                    <div class="student-info">
+                                        <% const leader = project.teamMembers.find(m => m.role === 'leader'); %>
+                                        <% if (leader) { %>
+                                            <span class="team-leader">
+                                                <%= leader.member.firstName %> <%= leader.member.lastName %> (Leader)
+                                            </span>
+                                            <small class="text-muted"><%= leader.member.email %></small>
+                                        <% } %>
+                                        <span class="badge bg-info mt-1"><%= project.teamMembers.length %> team members</span>
+                                    </div>
+                                <% } else { %>
+                                    <span class="text-muted">Not assigned</span>
+                                <% } %>
+                            </td>
+                            <td><%= project.createdAt.toLocaleDateString() %></td>
+                            <td class="action-buttons">
+                                <a href="/supervisors/projects/details/<%= project._id %>" 
+                                   class="btn btn-sm btn-primary"
+                                   title="View Details">
+                                   <i class="bi bi-eye"></i>
+                                    View
+                                </a>
+                                <a href="/supervisors/projects/edit/<%= project._id %>" 
+                                   class="btn btn-sm btn-warning"
+                                   title="Edit">
+                                    Edit
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="/supervisors/projects/<%= project._id %>?_method=DELETE" 
+                                      method="POST" 
+                                      class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        Delete
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                <% if (project.applicants && project.applicants.length > 0) { %>
+                                    <a href="/supervisors/projects/student-project/<%= project._id %>" 
+                                       class="btn btn-sm btn-info"
+                                       title="View Applicants">
+                                        Applicants (<%= project.applicants.length %>)
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                <% } %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

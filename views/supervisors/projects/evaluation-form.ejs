@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Evaluation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .project-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .evaluation-form {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .criteria-card {
+            border-left: 3px solid #6f42c1;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: white;
+        }
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+        .form-compact .form-group {
+            margin-bottom: 1rem;
+        }
+        .document-card {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="container py-4">
+        <!-- Project Details Section -->
+        <div class="project-details">
+            <h4 class="mb-3">Evaluating: <%= project.title %></h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Student:</strong> <%= project.studentDisplay %></p>
+                    <p><strong>Status:</strong> <span class="badge bg-<%= project.status === 'completed' ? 'success' : 'primary' %>">
+                        <%= project.status %>
+                    </span></p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">Evaluation Due: <%= new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString() %></p>
+                </div>
+            </div>
+
+            <!-- Documents Section -->
+            <% if (project.documents && project.documents.length > 0) { %>
+                <div class="mt-3">
+                    <h5>Project Documents</h5>
+                    <div class="row">
+                        <% project.documents.forEach(doc => { %>
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="document-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="text-truncate" style="max-width: 70%">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                            <%= doc.name %>
+                                        </div>
+                                        <a href="<%= doc.filePath %>" class="btn btn-sm btn-outline-primary" download>
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">
+                                        Uploaded: <%= doc.uploadDate.toLocaleDateString() %>
+                                        <% if (doc.phase) { %> | Phase: <%= doc.phase %><% } %>
+                                    </small>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> No documents uploaded yet
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Evaluation Form Section -->
+        <div class="evaluation-form mt-3">
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> <%= error.includes('+') ? error.replace(/\+/g, ' ') : error %>
+                </div>
+            <% } %>
+
+            <form action="/supervisors/projects/evaluate/<%= project._id %>" method="POST" class="form-compact">
+                <!-- Technical Implementation -->
+                <div class="criteria-card">
+                    <h5>Technical Implementation</h5>
+                    <div class="form-group">
+                        <label>Code Quality/Design:</label>
+                        <select class="form-select" name="codeQuality" required>
+                            <option value="">Select rating</option>
+                            <option value="5" <%= evaluation?.codeQuality === 5 ? 'selected' : '' %>>Excellent</option>
+                            <option value="4" <%= evaluation?.codeQuality === 4 ? 'selected' : '' %>>Good</option>
+                            <option value="3" <%= evaluation?.codeQuality === 3 ? 'selected' : '' %>>Satisfactory</option>
+                            <option value="2" <%= evaluation?.codeQuality === 2 ? 'selected' : '' %>>Needs Improvement</option>
+                            <option value="1" <%= evaluation?.codeQuality === 1 ? 'selected' : '' %>>Poor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Research and Analysis -->
+                <div class="criteria-card">
+                    <h5>Research and Analysis</h5>
+                    <div class="form-group">
+                        <label>Depth of Research:</label>
+                        <select class="form-select" name="researchDepth" required>
+                            <option value="">Select rating</option>
+                            <option value="5" <%= evaluation?.researchDepth === 5 ? 'selected' : '' %>>Exceptional</option>
+                            <option value="4" <%= evaluation?.researchDepth === 4 ? 'selected' : '' %>>Thorough</option>
+                            <option value="3" <%= evaluation?.researchDepth === 3 ? 'selected' : '' %>>Adequate</option>
+                            <option value="2" <%= evaluation?.researchDepth === 2 ? 'selected' : '' %>>Limited</option>
+                            <option value="1" <%= evaluation?.researchDepth === 1 ? 'selected' : '' %>>Insufficient</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Documentation -->
+                <div class="criteria-card">
+                    <h5>Documentation</h5>
+                    <div class="form-group">
+                        <label>Completeness:</label>
+                        <select class="form-select" name="documentationQuality" required>
+                            <option value="">Select rating</option>
+                            <option value="5" <%= evaluation?.documentationQuality === 5 ? 'selected' : '' %>>Comprehensive</option>
+                            <option value="4" <%= evaluation?.documentationQuality === 4 ? 'selected' : '' %>>Good</option>
+                            <option value="3" <%= evaluation?.documentationQuality === 3 ? 'selected' : '' %>>Acceptable</option>
+                            <option value="2" <%= evaluation?.documentationQuality === 2 ? 'selected' : '' %>>Partial</option>
+                            <option value="1" <%= evaluation?.documentationQuality === 1 ? 'selected' : '' %>>Incomplete</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Presentation -->
+                <div class="criteria-card">
+                    <h5>Presentation</h5>
+                    <div class="form-group">
+                        <label>Clarity and Organization:</label>
+                        <select class="form-select" name="presentationQuality" required>
+                            <option value="">Select rating</option>
+                            <option value="5" <%= evaluation?.presentationQuality === 5 ? 'selected' : '' %>>Outstanding</option>
+                            <option value="4" <%= evaluation?.presentationQuality === 4 ? 'selected' : '' %>>Clear</option>
+                            <option value="3" <%= evaluation?.presentationQuality === 3 ? 'selected' : '' %>>Adequate</option>
+                            <option value="2" <%= evaluation?.presentationQuality === 2 ? 'selected' : '' %>>Needs Work</option>
+                            <option value="1" <%= evaluation?.presentationQuality === 1 ? 'selected' : '' %>>Unclear</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Final Grade -->
+                <div class="criteria-card">
+                    <h5>Final Assessment</h5>
+                    <div class="form-group">
+                        <label>Final Grade:</label>
+                        <select class="form-select" name="finalGrade" required>
+                            <option value="">Select grade</option>
+                            <option value="A" <%= evaluation?.finalGrade === 'A' ? 'selected' : '' %>>A - Excellent</option>
+                            <option value="A-" <%= evaluation?.finalGrade === 'A-' ? 'selected' : '' %>>A-</option>
+                            <option value="B+" <%= evaluation?.finalGrade === 'B+' ? 'selected' : '' %>>B+</option>
+                            <option value="B" <%= evaluation?.finalGrade === 'B' ? 'selected' : '' %>>B - Good</option>
+                            <option value="B-" <%= evaluation?.finalGrade === 'B-' ? 'selected' : '' %>>B-</option>
+                            <option value="C+" <%= evaluation?.finalGrade === 'C+' ? 'selected' : '' %>>C+</option>
+                            <option value="C" <%= evaluation?.finalGrade === 'C' ? 'selected' : '' %>>C - Satisfactory</option>
+                            <option value="F" <%= evaluation?.finalGrade === 'F' ? 'selected' : '' %>>F - Fail</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Overall Feedback -->
+                <div class="criteria-card">
+                    <h5>Feedback and Suggestions</h5>
+                    <div class="form-group">
+                        <label>Strengths and Areas for Improvement:</label>
+                        <textarea class="form-control" name="overallFeedback" rows="5" required><%= evaluation?.overallFeedback || '' %></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/supervisors/projects/assigned-projects" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Projects
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send-check"></i> <%= evaluation ? 'Update Evaluation' : 'Submit Evaluation' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const requiredFields = this.querySelectorAll('[required]');
+            let valid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    field.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                alert('Please complete all required fields');
+            }
+        });
+    </script>
+</body>
+</html>

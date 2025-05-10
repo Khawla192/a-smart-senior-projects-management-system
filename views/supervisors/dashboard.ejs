@@ -1,16 +1,222 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supervisor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Shared styles with admin dashboard */
+        .dashboard-card {
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            border-left: 4px solid #28a745; /* Green accent for supervisor */
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .compact-card-body {
+            padding: 1.25rem;
+        }
+        .compact-card-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .compact-card-text {
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+        .btn-dashboard {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .supervisor-header {
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .text-purple {
+            color: #6f42c1;
+        }
+        .btn-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .btn-purple:hover {
+            background-color: #5a32a3;
+            color: white;
+        }
+        .view-switch {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    </style>
 </head>
-
 <body>
     <%- include('../partials/_navbar.ejs') %>
-        <h1>Welcome to your Dashboard</h1>
-        <% if (user) { %>
-            <p>Logged in as: <%= user.username %></p>
-            <% } %>
-</body>
 
+    <div class="container py-3">
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="row mb-3 supervisor-header">
+            <div class="col-12">
+                <h2 class="h4 fw-bold mb-0">Supervisor Dashboard</h2>
+                <p class="text-muted small">Welcome, <%= user.username %></p>
+                
+                <% if (user.role && user.role.type === 'admin') { %>
+                    <div class="view-switch">
+                        <div class="btn-group btn-group-sm">
+                            <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-person-gear"></i> Admin View
+                            </a>
+                            <a href="/supervisors/dashboard" class="btn btn-purple active">
+                                <i class="bi bi-person"></i> Supervisor View
+                            </a>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Add Project Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-primary">
+                            <i class="bi bi-plus-circle"></i>
+                        </div>
+                        <h5 class="compact-card-title">Add Project</h5>
+                        <p class="compact-card-text">Create and assign new projects</p>
+                        <a href="/supervisors/projects/new" class="btn btn-sm btn-primary btn-dashboard">
+                            <i class="bi bi-plus"></i> Add
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Projects Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-success">
+                            <i class="bi bi-folder"></i>
+                        </div>
+                        <h5 class="compact-card-title">My Projects</h5>
+                        <p class="compact-card-text"><%= myProjectsCount %> supervised</p>
+                        <a href="/supervisors/projects/show-all" class="btn btn-sm btn-success btn-dashboard">
+                            <i class="bi bi-list"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Applicants Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-info">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h5 class="compact-card-title">Project Applicants</h5>
+                        <p class="compact-card-text">Review applications</p>
+                        <a href="/supervisors/projects/applicants" class="btn btn-sm btn-info btn-dashboard">
+                            <i class="bi bi-list-check"></i> Review
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Projects Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-warning">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <h5 class="compact-card-title">Assigned Projects</h5>
+                        <p class="compact-card-text"><%= assignedProjectsCount %> to evaluate</p>
+                        <a href="/supervisors/projects/assigned-projects" class="btn btn-sm btn-warning btn-dashboard">
+                            <i class="bi bi-check"></i> Evaluate
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-secondary">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <h5 class="compact-card-title">Profile</h5>
+                        <p class="compact-card-text">Manage your account</p>
+                        <a href="/profile" class="btn btn-sm btn-secondary btn-dashboard">
+                            <i class="bi bi-gear"></i> Manage
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-danger">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h5 class="compact-card-title">Notifications</h5>
+                        <p class="compact-card-text">View your alerts</p>
+                        <a href="/notifications" class="btn btn-sm btn-danger btn-dashboard">
+                            <i class="bi bi-envelope"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Card -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body compact-card-body text-center">
+                        <div class="card-icon text-secondary">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <h5 class="compact-card-title">Contact</h5>
+                        <p class="compact-card-text">Message others</p>
+                        <a href="/contact" class="btn btn-sm btn-secondary btn-dashboard">
+                            <i class="bi bi-send"></i> Message
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

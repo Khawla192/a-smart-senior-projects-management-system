@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Project Phases</title>
+    <style>
+        .phase-card {
+            border-left: 4px solid #6c757d;
+            margin-bottom: 20px;
+        }
+        .phase-submitted {
+            border-left-color: #28a745;
+        }
+        .feedback-card {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .notes-section {
+            background-color: #fff3cd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <%- include('../../../partials/_navbar.ejs') %>
+
+    <div class="container mt-4">
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Project Phases: <%= project.title %></h2>
+            <a href="/supervisors/projects/student-project/<%= project._id %>" class="btn btn-outline-secondary">
+                Back to Project
+            </a>
+        </div>
+
+        <% const phases = [
+            { key: 'proposal', name: 'Proposal' },
+            { key: 'literatureReview', name: 'Literature Review' },
+            { key: 'planning', name: 'Planning' },
+            { key: 'design', name: 'Design' },
+            { key: 'implementation', name: 'Implementation' },
+            { key: 'presentation', name: 'Presentation' },
+            { key: 'reportPaper', name: 'Report Paper' },
+            { key: 'poster', name: 'Poster' }
+        ]; %>
+
+        <% phases.forEach(phase => { %>
+            <% const phaseData = project.phases[phase.key]; %>
+            <div class="card mb-4 <%= phaseData?.submittedAt ? 'phase-submitted' : '' %>">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <%= phase.name %> Phase
+                        <% if (phaseData?.submittedAt) { %>
+                            <span class="badge bg-success float-end">
+                                Submitted: <%= new Date(phaseData.submittedAt).toLocaleDateString() %>
+                                <% if (phaseData.submittedBy && phaseData.submittedBy.name) { %>
+                                    by <%= phaseData.submittedBy.name %>
+                                <% } %>
+                            </span>
+                        <% } else { %>
+                            <span class="badge bg-warning float-end">Pending Submission</span>
+                        <% } %>
+                    </h5>
+                </div>
+                
+                <% if (phaseData?.submittedAt) { %>
+                    <div class="card-body">
+                        <% if (phaseData.file) { %>
+                            <div class="mb-3">
+                                <h6>Submitted File:</h6>
+                                <a href="<%= phaseData.file %>" class="btn btn-sm btn-outline-primary" download>
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                            </div>
+                        <% } %>
+
+                        <% if (phaseData.note) { %>
+                            <div class="notes-section">
+                                <h6>Student Notes:</h6>
+                                <p><%= phaseData.note %></p>
+                            </div>
+                        <% } %>
+
+                        <form action="/supervisors/projects/phases/feedback/<%= project._id %>" method="POST">
+                            <input type="hidden" name="phase" value="<%= phase.key %>">
+                            <div class="mb-3">
+                                <label class="form-label">Your Feedback</label>
+                                <textarea name="comment" class="form-control" rows="3" required
+                                    placeholder="Provide constructive feedback..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Submit Feedback
+                            </button>
+                        </form>
+
+                        <% if (phaseData.feedback && phaseData.feedback.length > 0) { %>
+                            <div class="feedback-card mt-3">
+                              <h6>Previous Feedback:</h6>
+                              <% phaseData.feedback.forEach((fb, index) => { %>
+                                <div class="mb-3 <%= index > 0 ? 'pt-3 border-top' : '' %>">
+                                  <p class="mb-1"><%= fb.comment %></p>
+                                  <small class="text-muted">
+                                    <% if (fb.givenBy && fb.givenBy.name) { %>
+                                      <%= fb.givenBy.name %> on 
+                                    <% } else if (fb.givenBy) { %>
+                                      Supervisor on
+                                    <% } %>
+                                    <%= new Date(fb.createdAt).toLocaleDateString() %>
+                                  </small>
+                                </div>
+                              <% }); %>
+                            </div>
+                          <% } %>
+                    </div>
+                <% } else { %>
+                    <div class="card-body">
+                        <p class="text-muted mb-0">This phase has not been submitted yet.</p>
+                    </div>
+                <% } %>
+            </div>
+        <% }); %>
+    </div>
+</body>
+</html>

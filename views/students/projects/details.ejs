@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Project Details</title>
+    <style>
+        .phase-card {
+            border-left: 4px solid #0d6efd;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .phase-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            height: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Project Details</h2>
+            <a href="/students/projects/index" class="btn btn-outline-secondary">
+                Back to Projects
+            </a>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><%= project.title %></h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Description</h5>
+                        <p class="card-text"><%= project.description %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Phases -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Project Phases</h4>
+            </div>
+            <div class="card-body">
+                <p>Manage all project phases in one place</p>
+                <a href="/students/projects/phases/<%= project._id %>" class="btn btn-primary">
+                    Go to Phases Management
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

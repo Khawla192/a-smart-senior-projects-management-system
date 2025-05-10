@@ -1,59 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/stylesheets/auth.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .auth-container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      background-color: white;
+    }
+    .auth-title {
+      color: #2575fc;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    .btn-auth {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      border: none;
+      padding: 10px 20px;
+      font-weight: 500;
+    }
+    .auth-links a {
+      color: #2575fc;
+      text-decoration: none;
+    }
+    .auth-links a:hover {
+      text-decoration: underline;
+    }
+    .password-hint {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+  </style>
 </head>
 
-<body>
+<body class="bg-light">
   <%- include('../partials/_navbar.ejs') %>
-    <div class="container">
-      <h1>Create a new account!</h1>
+  
+  <div class="container py-5">
+    <div class="auth-container">
+      <h1 class="auth-title text-center">
+        <i class="bi bi-person-plus"></i> Create Account
+      </h1>
+
       <form action="/auth/sign-up" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required />
-
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required />
-
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required autocomplete="new-password" minlength="8" />
-
-        <label for="confirmPassword">Confirm Password:</label>
-        <input type="password" name="confirmPassword" id="confirmPassword" required minlength="8" />
-
-        <button type="submit">Sign up</button>
-
-        <div class="auth-links">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" 
+                 required autocomplete="new-password" minlength="8">
+          <div class="password-hint">Must be at least 8 characters long</div>
+        </div>
+        
+        <div class="mb-3">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <input type="password" class="form-control" id="confirmPassword" 
+                 name="confirmPassword" required minlength="8">
+        </div>
+        
+        <div class="d-grid mb-3">
+          <button type="submit" class="btn btn-primary btn-auth">
+            Sign Up
+          </button>
+        </div>
+        
+        <div class="auth-links text-center">
           <p>Already have an account? <a href="/auth/sign-in">Sign in</a></p>
         </div>
       </form>
     </div>
+  </div>
 
-    <script>
-      // Client-side password validation
-      document.querySelector('form').addEventListener('submit', function (e) {
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (password !== confirmPassword) {
-          e.preventDefault();
-          alert('Passwords do not match!');
-          return false;
-        }
-
-        if (password.length < 8) {
-          e.preventDefault();
-          alert('Password must be at least 8 characters long!');
-          return false;
-        }
-
-        return true;
-      });
-    </script>
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      // Clear previous alerts
+      const oldAlerts = document.querySelectorAll('.alert');
+      oldAlerts.forEach(alert => alert.remove());
+      
+      if (password !== confirmPassword) {
+        e.preventDefault();
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning mt-3';
+        alertDiv.textContent = 'Passwords do not match!';
+        document.querySelector('.auth-container').prepend(alertDiv);
+        return false;
+      }
+      
+      if (password.length < 8) {
+        e.preventDefault();
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning mt-3';
+        alertDiv.textContent = 'Password must be at least 8 characters long!';
+        document.querySelector('.auth-container').prepend(alertDiv);
+        return false;
+      }
+      
+      return true;
+    });
+  </script>
 </body>
-
 </html>

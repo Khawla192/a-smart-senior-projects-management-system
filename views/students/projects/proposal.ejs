@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Proposal</title>
+</head>
+
+<body>
+    <%- include('../../partials/_navbar.ejs') %>
+        <div class="phase-container">
+            <h3>Proposal Phase</h3>
+            
+            <% if (phaseData.completed) { %>
+              <div class="alert alert-success">
+                This phase was completed on <%= phaseData.completionDate.toDateString() %>
+              </div>
+            <% } %>
+            
+            <!-- Phase Content Here -->
+            <div class="files-section">
+              <h4>Submitted Files</h4>
+              <% if (phaseData.files && phaseData.files.length > 0) { %>
+                <ul>
+                  <% phaseData.files.forEach(file => { %>
+                    <li>
+                      <a href="<%= file.url %>"><%= file.name %></a>
+                      <small>Uploaded: <%= file.uploadedAt.toDateString() %></small>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } else { %>
+                <p>No files submitted yet</p>
+              <% } %>
+            </div>
+            
+            <!-- File Upload Form -->
+            <form action="/api/project/<%= project._id %>/phase/proposal/upload" method="POST" enctype="multipart/form-data">
+              <div class="mb-3">
+                <input type="file" class="form-control" name="proposalFile" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Upload Proposal</button>
+            </form>
+          </div>
+</body>
+
+</html>

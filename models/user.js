@@ -7,10 +7,6 @@ const roleSchema = mongoose.Schema({
     enum: ['student', 'admin', 'supervisor', 'external_examiner'],
     required: true,
   },
-  permissions: {
-    type: [String],
-    default: [],
-  },
 });
 
 const userSchema = mongoose.Schema(
@@ -43,16 +39,86 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: roleSchema,
-      required: true,
+    },
+    id: {
+      type: Number,
+      required: false, 
     },
     firstName: String,
     lastName: String,
     phone: Number,
+
+    // Add projects reference
+    projects: {
+      asStudent: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        validate: {
+          validator: async function(v) {
+            const project = await mongoose.model('Project').findById(v);
+            return project && project.student.toString() === this._id.toString();
+          },
+          message: 'Project is not assigned to this student',
+        },
+      }],
+      asTeamMember: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        validate: {
+          validator: async function(v) {
+            const project = await mongoose.model('Project').findById(v);
+            return project && project.teamMembers.includes(this._id);
+          },
+          message: 'You are not a team member of this project',
+        },
+      }],
+      asSupervisor: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        validate: {
+          validator: async function(v) {
+            const project = await mongoose.model('Project').findById(v);
+            return project && project.supervisors.includes(this._id);
+          },
+          message: 'You are not a supervisor of this project',
+        },
+      }],
+      asExaminer: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        validate: {
+          validator: async function(v) {
+            const project = await mongoose.model('Project').findById(v);
+            return project && project.externalExaminer?.toString() === this._id.toString();
+          },
+          message: 'You are not the examiner of this project'
+        },
+      }],
+    },
+    managedSupervisors: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
   },
   {
     timestamps: true,
-  },
+    toJSON: {
+      virtuals: true,
+      transform: function(doc, ret) {
+        delete ret.password;
+        return ret;
+      }
+    },
+    toObject: {
+      virtuals: true
+    },
+  }
 );
+
+// // Virtual for full name
+// userSchema.virtual('fullName').get(function() {
+//   return `${this.firstName} ${this.lastName}`;
+// });
 
 // Determine role based on email before saving
 userSchema.pre('save', async function(next) {
@@ -79,7 +145,7 @@ userSchema.pre('save', async function(next) {
   
   try {
     const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+    this.password = bcrypt.hash(this.password, salt);
     next();
   } catch (err) {
     next(err);
@@ -88,7 +154,25 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
+};
+
+// Add project reference method
+userSchema.methods.addProjectReference = async function(projectId, roleType) {
+  const updateField = `projects.as${roleType.charAt(0).toUpperCase() + roleType.slice(1)}`;
+  await this.updateOne({
+    $addToSet: { [updateField]: projectId }
+  });
+};
+
+// Query helper for active users
+userSchema.query.active = function() {
+  return this.where({ active: true });
 };
 
 const User = mongoose.model('User', userSchema);
